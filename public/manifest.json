@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "ScamEye",
+  "version": "1.0.0",
+  "description": "Analyzes clickable elements and displays a fraud risk percentage helping users browse safely.",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "logo.png"
+  },
+  "permissions": [],
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  }
+}
