@@ -7,10 +7,8 @@ export default defineConfig({
     react(),
     viteStaticCopy({
       targets: [
-        {
-          src: "public/manifest.json",
-          dest: ".",
-        },
+        { src: "public/manifest.json", dest: "." },
+        { src: "public/logo.png", dest: "." },
       ],
     }),
   ],
@@ -18,7 +16,11 @@ export default defineConfig({
     outDir: "build",
     rollupOptions: {
       input: {
-        main: "./index.html",
+        main: "index.html",
+        content: "src/content.ts", // Add content script
+      },
+      output: {
+        entryFileNames: "[name].js",
       },
     },
   },
