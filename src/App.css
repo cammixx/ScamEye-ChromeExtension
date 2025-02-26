@@ -1,1 +1,16 @@
 /*  */
+.logo {
+  width: 128px !important;
+  height: 128px !important;
+  margin: 0 auto;
+  display: block;
+}
+
+.container {
+  min-width: 256px !important;
+  overflow: hidden;
+}
+
+body {
+  border: 1px solid #fff;
+}
