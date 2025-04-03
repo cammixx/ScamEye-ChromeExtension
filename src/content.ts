@@ -6,14 +6,24 @@ const getRiskColor = (riskPercent: number) => {
   return { color: "#8b0000", label: "Highly Dangerous" };
 };
 
+let activePopup: HTMLDivElement | null = null;
+let activeLink: string | null = null;
+
 document.addEventListener("mouseover", (event: MouseEvent) => {
   chrome.storage.local.get("extensionEnabled", (data) => {
-    if (!data.extensionEnabled) return; // Stop if disabled
+    if (!data.extensionEnabled) return;
 
     const target = event.target as HTMLAnchorElement;
 
     if (target.tagName === "A" && target.href) {
-      const riskPercent = Math.floor(Math.random() * 101); // Replace with actual risk calculation
+      if (activeLink === target.href) return;
+
+      if (activePopup) {
+        activePopup.remove();
+        activePopup = null;
+      }
+
+      const riskPercent = Math.floor(Math.random() * 101);
       const { color, label } = getRiskColor(riskPercent);
 
       const popup = document.createElement("div");
@@ -52,15 +62,40 @@ document.addEventListener("mouseover", (event: MouseEvent) => {
       ${label} (${riskPercent}%)
     </p>
   </div>
-</div>
-
-    `;
+</div>`;
 
       document.body.appendChild(popup);
+      activePopup = popup;
+      activeLink = target.href;
 
-      target.addEventListener("mouseleave", () => {
-        popup.remove();
-      });
+      const handleMouseLeave = () => {
+        if (activePopup) {
+          activePopup.remove();
+          activePopup = null;
+          activeLink = null;
+        }
+
+        target.removeEventListener("mouseleave", handleMouseLeave);
+      };
+
+      target.addEventListener("mouseleave", handleMouseLeave);
     }
   });
+});
+
+document.addEventListener("mouseout", (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (target.tagName !== "A") {
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    if (
+      !relatedTarget ||
+      (relatedTarget.tagName !== "A" && !target.contains(relatedTarget))
+    ) {
+      if (activePopup) {
+        activePopup.remove();
+        activePopup = null;
+        activeLink = null;
+      }
+    }
+  }
 });
