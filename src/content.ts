@@ -6,25 +6,54 @@ const getRiskColor = (riskPercent: number) => {
   return { color: "#8b0000", label: "Highly Dangerous" };
 };
 
-let activePopup: HTMLDivElement | null = null;
-let activeLink: string | null = null;
+let activePopup: HTMLDivElement | null = null; // Track the currently active popup
+let activeLink: string | null = null; // Track the currently active link URL
+
+// Update stats in localStorage
+const updateStats = (riskPercent: number) => {
+  // Increment links scanned
+  const currentLinksScanned = parseInt(
+    localStorage.getItem("scameye-links-scanned") || "0"
+  );
+  localStorage.setItem(
+    "scameye-links-scanned",
+    (currentLinksScanned + 1).toString()
+  );
+
+  // If risky or dangerous, increment threat links
+  if (riskPercent > 60) {
+    const currentThreatLinks = parseInt(
+      localStorage.getItem("scameye-threat-links") || "0"
+    );
+    localStorage.setItem(
+      "scameye-threat-links",
+      (currentThreatLinks + 1).toString()
+    );
+  }
+};
 
 document.addEventListener("mouseover", (event: MouseEvent) => {
   chrome.storage.local.get("extensionEnabled", (data) => {
-    if (!data.extensionEnabled) return;
+    if (!data.extensionEnabled) return; // Stop if disabled
 
     const target = event.target as HTMLAnchorElement;
 
     if (target.tagName === "A" && target.href) {
-      if (activeLink === target.href) return;
+      // Only proceed if this is a new link or there's no active popup
+      if (activeLink === target.href) return; // Skip if already showing popup for this link
 
+      // Remove any existing popup before creating a new one
       if (activePopup) {
         activePopup.remove();
         activePopup = null;
       }
 
+      // Calculate risk (replace with actual risk calculation)
       const riskPercent = Math.floor(Math.random() * 101);
       const { color, label } = getRiskColor(riskPercent);
+
+      // Update stats in localStorage
+      updateStats(riskPercent);
 
       const popup = document.createElement("div");
       popup.id = "scameye-popup";
@@ -74,7 +103,7 @@ document.addEventListener("mouseover", (event: MouseEvent) => {
           activePopup = null;
           activeLink = null;
         }
-
+        // Remove this event listener to prevent memory leaks
         target.removeEventListener("mouseleave", handleMouseLeave);
       };
 
@@ -83,10 +112,12 @@ document.addEventListener("mouseover", (event: MouseEvent) => {
   });
 });
 
+// Additionally, handle cases where user might move mouse quickly between links
 document.addEventListener("mouseout", (event: MouseEvent) => {
   const target = event.target as HTMLElement;
   if (target.tagName !== "A") {
     const relatedTarget = event.relatedTarget as HTMLElement;
+    // If we're not moving to another anchor or child of current anchor
     if (
       !relatedTarget ||
       (relatedTarget.tagName !== "A" && !target.contains(relatedTarget))

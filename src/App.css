@@ -1,16 +1,68 @@
-/*  */
-.logo {
-  width: 128px !important;
-  height: 128px !important;
-  margin: 0 auto;
-  display: block;
+/* App.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f8fafc;
 }
 
 .container {
-  min-width: 256px !important;
-  overflow: hidden;
+  min-width: 300px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-body {
-  border: 1px solid #fff;
+/* Toggle switch styling */
+.form-check-input:checked {
+  box-shadow: none !important;
+  background-color: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+/* Smooth transitions */
+.form-check-input,
+.btn,
+a {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Stat boxes */
+.stat-box {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.stat-box:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Links */
+a:hover {
+  color: #6366f1 !important;
+}
+
+/* Status colors */
+.status-label {
+  font-size: 0.9rem;
+}
+
+/* Scrollbar */
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
