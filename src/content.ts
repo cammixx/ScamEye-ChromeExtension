@@ -28,12 +28,39 @@ const updateStats = (riskPercent: number) => {
     );
   }
 
-  // Dispatch a custom event to notify App.tsx
   window.dispatchEvent(new CustomEvent("scameye-stats-updated"));
 };
 
-document.addEventListener("mouseover", (event: MouseEvent) => {
-  chrome.storage.local.get("extensionEnabled", (data) => {
+const getRiskPercentFromApi = async (
+  url: string
+): Promise<{ riskPercent: number; resolvedUrl: string }> => {
+  try {
+    const response = await fetch("http://localhost:8000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    if (!response.ok) {
+      return { riskPercent: 50, resolvedUrl: url };
+    }
+
+    const data = await response.json();
+    return {
+      riskPercent: data.risk ?? 50,
+      resolvedUrl: data.url ?? url,
+    };
+  } catch (error) {
+    console.log(error);
+    return { riskPercent: 50, resolvedUrl: url };
+  }
+};
+
+document.addEventListener("mouseover", async (event: MouseEvent) => {
+  chrome.storage.local.get("extensionEnabled", async (data) => {
+    // Make the callback async
     if (!data.extensionEnabled) return;
 
     const target = event.target as HTMLAnchorElement;
@@ -46,12 +73,13 @@ document.addEventListener("mouseover", (event: MouseEvent) => {
         activePopup = null;
       }
 
-      // Replace this with your actual risk calculation logic!
-      const riskPercent = Math.floor(Math.random() * 101); // REPLACE THIS LINE!
+      const { riskPercent, resolvedUrl } = await getRiskPercentFromApi(
+        target.href
+      ); // Await the API call
 
       const { color, label } = getRiskColor(riskPercent);
 
-      updateStats(riskPercent); // Call updateStats with the calculated risk
+      updateStats(riskPercent);
 
       const popup = document.createElement("div");
       popup.id = "scameye-popup";
@@ -81,9 +109,10 @@ document.addEventListener("mouseover", (event: MouseEvent) => {
             <p style="margin: 0; font-size: 14px; color: #262626; font-weight: bold; white-space: normal;">
               Checking risk for:
             </p>
-            <p style="margin: 0; font-size: 12px; color: #555; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
-              ${target.href}
-            </p>
+         <div style="margin: 0; font-size: 12px; color: #555; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
+          <div><strong>Original:</strong> ${target.href}</div>
+          <div><strong>Resolved:</strong> ${resolvedUrl}</div>
+        </div>
             <p style="margin: 0; font-size: 14px; font-weight: bold; color: ${color}; white-space: normal;">
               ${label} (${riskPercent}%)
             </p>
