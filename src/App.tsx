@@ -6,6 +6,7 @@ import { IoIosSpeedometer } from "react-icons/io";
 
 const App: React.FC = () => {
   const [enabled, setEnabled] = useState<boolean>(false);
+  const [showOnlyRiskyOnes, setShowOnlyRiskyOnes] = useState<boolean>(false);
 
   useEffect(() => {
     chrome.storage.local.get(
@@ -14,12 +15,30 @@ const App: React.FC = () => {
         setEnabled(data.extensionEnabled || false);
       }
     );
+    chrome.storage.local.get(
+      "showOnlyRiskyOnes",
+      (data: { showOnlyRiskyOnes: boolean }) => {
+        setShowOnlyRiskyOnes(data.showOnlyRiskyOnes || false);
+      }
+    );
   }, []);
 
   const toggleExtension = () => {
     const newState = !enabled;
     chrome.storage.local.set({ extensionEnabled: newState });
     setEnabled(newState);
+
+    // when exension is disabled, set showOnlyRiskyOnes to false
+    if (!newState) {
+      chrome.storage.local.set({ showOnlyRiskyOnes: false });
+      setShowOnlyRiskyOnes(false);
+    }
+  };
+
+  const toggleShowOnlyRiskyOnes = () => {
+    const newState = !showOnlyRiskyOnes;
+    chrome.storage.local.set({ showOnlyRiskyOnes: newState });
+    setShowOnlyRiskyOnes(newState);
   };
 
   return (
@@ -70,6 +89,33 @@ const App: React.FC = () => {
               id="enableSwitch"
               checked={enabled}
               onChange={toggleExtension}
+              style={{
+                width: "3rem",
+                height: "1.5rem",
+                cursor: "pointer",
+                boxShadow: "none",
+                backgroundColor: enabled ? "#10B981" : "#CBD5E1",
+              }}
+            />
+          </div>
+        </div>
+        <div className="d-flex justify-content-between align-items-center">
+          <span
+            className={`status-label ${
+              showOnlyRiskyOnes ? "text-success fw-bold" : "text-muted"
+            }`}
+          >
+            {showOnlyRiskyOnes ? "Only Risky Links" : "Show All Links"}
+          </span>
+          <div className="form-check form-switch">
+            <input
+              disabled={!enabled}
+              className="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="showOnlyRiskyOnesSwitch"
+              checked={showOnlyRiskyOnes}
+              onChange={toggleShowOnlyRiskyOnes}
               style={{
                 width: "3rem",
                 height: "1.5rem",
