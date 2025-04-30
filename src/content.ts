@@ -59,31 +59,37 @@ const getRiskPercentFromApi = async (
 };
 
 document.addEventListener("mouseover", async (event: MouseEvent) => {
-  chrome.storage.local.get("extensionEnabled", async (data) => {
-    // Make the callback async
-    if (!data.extensionEnabled) return;
+  chrome.storage.local.get(
+    ["extensionEnabled", "showOnlyRiskyOnes"],
+    async (data) => {
+      if (!data.extensionEnabled) return;
 
-    const target = event.target as HTMLAnchorElement;
+      const target = event.target as HTMLAnchorElement;
 
-    if (target.tagName === "A" && target.href) {
-      if (activeLink === target.href) return;
+      if (target.tagName === "A" && target.href) {
+        if (activeLink === target.href) return;
 
-      if (activePopup) {
-        activePopup.remove();
-        activePopup = null;
-      }
+        if (activePopup) {
+          activePopup.remove();
+          activePopup = null;
+        }
 
-      const { riskPercent, resolvedUrl } = await getRiskPercentFromApi(
-        target.href
-      ); // Await the API call
+        const { riskPercent, resolvedUrl } = await getRiskPercentFromApi(
+          target.href
+        );
 
-      const { color, label } = getRiskColor(riskPercent);
+        // Check if "Show Only Risky Ones" is enabled and riskPercent <= 60
+        if (data.showOnlyRiskyOnes && riskPercent <= 60) {
+          return; // Don't show popup if link is not risky enough
+        }
 
-      updateStats(riskPercent);
+        const { color, label } = getRiskColor(riskPercent);
 
-      const popup = document.createElement("div");
-      popup.id = "scameye-popup";
-      popup.innerHTML = `
+        updateStats(riskPercent);
+
+        const popup = document.createElement("div");
+        popup.id = "scameye-popup";
+        popup.innerHTML = `
         <div style="
           display: flex; 
           align-items: center; 
@@ -109,10 +115,10 @@ document.addEventListener("mouseover", async (event: MouseEvent) => {
             <p style="margin: 0; font-size: 14px; color: #262626; font-weight: bold; white-space: normal;">
               Checking risk for:
             </p>
-         <div style="margin: 0; font-size: 12px; color: #555; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
-          <div><strong>Original:</strong> ${target.href}</div>
-          <div><strong>Resolved:</strong> ${resolvedUrl}</div>
-        </div>
+            <div style="margin: 0; font-size: 12px; color: #555; white-space: normal; word-wrap: break-word; overflow-wrap: break-word;">
+              <div><strong>Original:</strong> ${target.href}</div>
+              <div><strong>Resolved:</strong> ${resolvedUrl}</div>
+            </div>
             <p style="margin: 0; font-size: 14px; font-weight: bold; color: ${color}; white-space: normal;">
               ${label} (${riskPercent}%)
             </p>
@@ -120,22 +126,23 @@ document.addEventListener("mouseover", async (event: MouseEvent) => {
         </div>
       `;
 
-      document.body.appendChild(popup);
-      activePopup = popup;
-      activeLink = target.href;
+        document.body.appendChild(popup);
+        activePopup = popup;
+        activeLink = target.href;
 
-      const handleMouseLeave = () => {
-        if (activePopup) {
-          activePopup.remove();
-          activePopup = null;
-          activeLink = null;
-        }
-        target.removeEventListener("mouseleave", handleMouseLeave);
-      };
+        const handleMouseLeave = () => {
+          if (activePopup) {
+            activePopup.remove();
+            activePopup = null;
+            activeLink = null;
+          }
+          target.removeEventListener("mouseleave", handleMouseLeave);
+        };
 
-      target.addEventListener("mouseleave", handleMouseLeave);
+        target.addEventListener("mouseleave", handleMouseLeave);
+      }
     }
-  });
+  );
 });
 
 document.addEventListener("mouseout", (event: MouseEvent) => {
